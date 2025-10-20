@@ -43,17 +43,52 @@ export class UsersService {
       return{
         seccess: false,
         message: `error when get user: ${error.message}`,
-        data: null
       }
-    };
+    }
   }
 
   findOne(id: number) {
     return `This action returns a #${id} user`;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    try{
+      const {name, email, password} = updateUserDto
+      const findUser = await this.prisma.user.findFirst({
+        where: {id:id }
+      })
+      if (!findUser){
+        return {
+          success: false,
+          message: `user does not exits`,
+          data: null
+        }
+      }
+
+      const updateUser = await this.prisma.user.update({
+        where: { id: id},
+        data: {
+          name: name ?? findUser.name,
+          email: email ?? findUser.email,
+          password: password ?? findUser.password,
+          // password: password ? await this.bcrypt.hashPassword(password)
+        }
+      });
+
+      return{
+        success: true,
+        message: `New User has update`,
+        data: updateUser
+      }
+
+    } catch (error) {
+      return {
+        success: false,
+        message: `error when update user: ${error.message}`,
+        data: null
+      }
+
+    }
   }
 
   remove(id: number) {
